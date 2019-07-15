@@ -1,0 +1,55 @@
+###########
+## NetGSA
+###########
+rm(list = ls())
+set.seed(2)
+
+## load the required libraries
+library(corpcor)
+library(glasso)
+library(glmnet)
+library(netgsa)
+
+## load the data
+load('/Users/ashojaie/Dropbox/Teaching/shortcourse_NET/Ali/NetGSAexample/netgsaexdat.RData')
+
+## define some parameters
+npath = nrow(B)
+paths = rownames(B)
+genenames = rownames(A)
+ncond = length(unique(y))  #number of groups 
+p = ncol(A)  #number of genes/metabolites
+
+## expression data for network estimation; data is centered and scaled
+zz = vector("list", ncond)
+zz[[1]] = t(scale(t(x[, which(y == "N")])))
+zz[[2]] = t(scale(t(x[, which(y == "T")])))
+
+## initialize required matrices
+fit = vector("list", ncond)
+wAdj = vector("list", ncond)
+
+lambda_opt = c(1.9*sqrt(log(p)/ncol(zz[[1]])), 1.8*sqrt(log(p)/ncol(zz[[2]])))
+for (k in 1:ncond) {
+  rho_star = 0.1 * sqrt(log(p)/ncol(zz[[k]]))
+  ## NOTE: Here, network is assumed to be known (one=A) -- only weights are estiamted
+  fit[[k]] = netEst.undir(t(zz[[k]]), one=A, lambda=lambda_opt[[k]], 
+                          rho=rho_star, eta=0.05)
+  wAdj[[k]] = fit[[k]]$Adj
+}
+
+## Now, run NetGSA
+n1 = ncol(x[, which(y == "N")])
+n2 = ncol(x[, which(y == "T")])
+out = NetGSA(wAdj, x=cbind(x[, which(y == "N")], x[, which(y == "T")]), 
+             y=c(rep(1, n1), rep(2, n2)), B=B, lklMethod="REML")
+
+## Plot the p-values
+path_qvals = p.adjust(out$p.value,"BH")
+mycol = rep(8, npath); mycol[path_qvals < 0.05] = 2
+mycex = rep(0.5, npath); mycex[path_qvals < 0.05] = 0.75
+par(las=2, mar=c(5,4,0.1,0.1))
+plot(-log10(path_qvals), ylab='-log10(q)', xlab='', axes=F, 
+     pch=20, col=mycol, cex=mycex)
+box(); axis(2); axis(1, at=1:npath, labels=paths)
+abline(h=-log10(0.05), lty=2, col=2, lwd=2)
