@@ -26,7 +26,7 @@ read.matrix <- function(file) {
 
 ## NOTE: Update this path and make sure that you have saved the data 
 setwd("/Users/Amy\ 1/Desktop/UW_Biostats/Network_omics")
-liver_ge <- read.matrix("liver_expression_head2500.txt")
+liver_ge <- read.matrix("Network_omics/liver_expression_head2500.txt")
 
 
 ## Removes probes with >5% of observations missing
@@ -62,7 +62,6 @@ if (any(is.na(liver_ge_fil)))
 
 anyNA(liver_ge_fil)
 anyNA(liver_ge_fil_imp)
-dim(liver_ge_fil_imp_vary)
 
 ## Chose the top varying probes
 most_varying <- function(ge, topN=1000) {
@@ -75,6 +74,7 @@ most_varying <- function(ge, topN=1000) {
 
 top_varying <- most_varying(liver_ge_fil_imp)
 liver_ge_fil_imp_vary <- liver_ge_fil_imp[top_varying,]
+dim(liver_ge_fil_imp_vary)
 
 
 ## Network inference

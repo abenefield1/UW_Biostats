@@ -40,12 +40,12 @@ rm(list=ls())
 ##
 #setwd('/Users/ashojaie/Dropbox/Teaching/shortcourse_NET/Ali/')
 
-sachscov <- as.matrix(read.table("sachscov.txt"))
+sachscov <- as.matrix(read.table("Network_omics/sachscov.txt"))
 dim(sachscov)
 
 sachscor <- cov2cor(sachscov)
 
-sachsdat <- as.matrix(read.table("sachs.data"))
+sachsdat <- as.matrix(read.table("Network_omics/sachs.data.txt"))
 dim(sachsdat)
 
 p <- ncol(sachsdat)
@@ -82,26 +82,36 @@ fisherps  <- 2*pnorm(abs(fisherzs), 0, 1/sqrt(n-3), lower.tail=FALSE)
 A3 <- fisherps < (0.01/(p*(p-1)/2)); diag(A3) <- 0
 sum(A3)
 
+
+mim <- build.mim(sachsdat)
+dim(mim)
+A4<-round(minet::aracne(mim, eps=0.3), 3) # Need to specify threshold
+A4<-1*(A4>0); diag(A4)<-0
 ## 
 ## plot the three networks
 ##
 g1 <- graph.adjacency(A1, mode="undirected")
 g2 <- graph.adjacency(A2, mode="undirected")
 g3 <- graph.adjacency(A3, mode="undirected")
+g4 <- graph.adjacency(A4, mode="undirected")
 
-pdf('plot.pdf', width=9, height=3)
-par(mfrow = c(1,3))
+
+pdf('Network_omics/plot.pdf', width=9, height=3)
+par(mfrow = c(1,4))
 plot(g1,layout=layout.circle(g1), main='A1')
 plot(g2,layout=layout.circle(g2), main='A2')
 plot(g3,layout=layout.circle(g3), main='A3')
+plot(g4,layout=layout.circle(g4), main='A4')
+
 dev.off()
 g0 <- g2
 
 ##
 ## ARACNE
-##
+## mutual information matrix
 mim <- build.mim(sachsdat)
-round(minet::aracne(mim, eps=0.3), 3)
+dim(mim)
+A4<-round(minet::aracne(mim, eps=0.3), 3) # Need to specify threshold
 
 ##
 ## Partial correlation networks
@@ -152,6 +162,7 @@ g5 <- graph.adjacency(A5, mode="undirected")
 ##
 ## binary network estimation
 ##
+
 library(glmnet)
 
 head(sachsdat)
